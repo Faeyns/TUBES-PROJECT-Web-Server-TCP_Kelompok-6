@@ -1,75 +1,91 @@
+# Mengimport semua simbol dari modul socket
 from socket import *
+# Mengimport modul sys
 import sys 
 
-#Making Server Host and Server Port to connect
+# Membuat objek serverHost menggunakan fungsi socket()
+# dengan AF_INET: Menggunakan protokol IPv4 dan SOCK_STREAM: Menggunakan TCP sebagai protokol transport
 serverHost = socket(AF_INET, SOCK_STREAM)
+# Menentukan nomor port untuk server
 serverPort = 3275
 
+# Melakukan binding serverHost ke alamat IP yang tersedia dan nomor port yang ditentukan
 serverHost.bind(('', serverPort))
+# Mendengarkan koneksi masuk dari client
+# Parameter 1 menentukan jumlah koneksi yang dapat ditangani secara simultan
 serverHost.listen(1)
 
 while True:
-    #Establish connection
+    # Memberikan pesan server sudah ready
     print('Server is Ready')
     
+    # Menerima koneksi dari client dan mengembalikan objek socket koneksi (connectionSocket) dan alamat client (addr)
     connectionSocket, addr = serverHost.accept()
     try:
-        #Taking the requested file name and finding the file in file system
+        # Mengambil nama file yang diminta dan mencari file di sistem file
         name = connectionSocket.recv(1024)
+        # Membagi data yang diterima menjadi sebuah list kata menggunakan spasi sebagai pemisah
         filename = name.split()[1]
+        # Mencetak nama file yang diminta
         print(filename)
+        # Mengecek jika terdapat nama file yang diminta dengan mengecek input '/'
         if filename == b'/':
             raise Exception
-        f = open(filename[1:], "rb")
-        outputdata = f.read()
-        
-        #Send one HTTP header line into socket
-        header = '\nHTTP/1.1 200 OK\n\n'
-        connectionSocket.send(header.encode())
-   
-        #Send the content of the requested file to the client
-        for i in range(0, len(outputdata)):
-            connectionSocket.send(outputdata[i:i+1])
-        connectionSocket.send(b'\r\n\r\n')
+        # Membuka file yang diminta dalam mode baca biner dengan menggunakan statement 'with'
+        # dan menghasilkan file objek yang disimpan dalam variabel 'f'
+        with open(filename[1:], "rb") as f:
+            # Membaca semua isi file dan menyimpannya dalam variabel 'outputdata'
+            outputdata = f.read()
+
+        # Mengirim satu baris header HTTP dengan status 200 OK ke socket
+        header = b'HTTP/1.1 200 OK\r\n\r\n'
+        # Mengirimkan data yang terdiri dari header HTTP dan outputdata ke socket client
+        connectionSocket.send(header + outputdata)
+        # Mencetak pesan bahwa respon telah selesai dan menunggu server
         print('Response done, waiting for server...\n')
 
-        #Close client socket
+        # Menutup socket client
         connectionSocket.close()
     
     except IOError:
-        #Send response for file not found
+        # Mengirimkan respon untuk halaman 404 tidak ditemukan
         filename = b'/NotFoundPage.html'
-        f = open(filename[1:], "rb")
-        outputdata = f.read()
-        header = '\nHTTP/1.1 404 Not Found\n\n'
-        connectionSocket.send(header.encode())
-        
-        #Send the content of the NotFoundPage.html to the client
-        for i in range(0, len(outputdata)):
-            connectionSocket.send(outputdata[i:i+1])
-        connectionSocket.send(b'\r\n\r\n')
+        # Membuka file yang diminta dalam mode baca biner dengan menggunakan statement 'with'
+        # dan menghasilkan file objek yang disimpan dalam variabel 'f'
+        with open(filename[1:], "rb") as f:
+            # Membaca isi file yang diminta dan menyimpannya dalam variabel 'outputdata'
+            outputdata = f.read()
+
+        # Mengirim satu baris header HTTP dengan status 404 Not Found ke socket
+        header = b'HTTP/1.1 404 Not Found\r\n\r\n'
+        # Mengirimkan data yang terdiri dari header HTTP dan outputdata ke socket client
+        connectionSocket.send(header + outputdata)
+        # Mencetak pesan bahwa respon telah selesai dan menunggu server
         print('Response done, waiting for server...\n')
 
-        #Close client socket
+        # Menutup socket client
         connectionSocket.close()
     
     except Exception:
-        #Send response for landing page
+        # Mengirimkan respon untuk halaman landing
         filename = b'/WelcomePage.html'
-        f = open(filename[1:], "rb")
-        outputdata = f.read()
-        header = '\nHTTP/1.1 200 OK\n\n'
-        connectionSocket.send(header.encode())
+        # Membuka file yang diminta dalam mode baca biner dengan menggunakan statement 'with'
+        # dan menghasilkan file objek yang disimpan dalam variabel 'f'
+        with open(filename[1:], "rb") as f:
+            # Membaca isi file yang diminta dan menyimpannya dalam variabel 'outputdata'
+            outputdata = f.read()
 
-        #Send the content of the WelcomePage.html to the client
-        for i in range(0, len(outputdata)):
-            connectionSocket.send(outputdata[i:i+1])
-        connectionSocket.send(b'\r\n\r\n')
+        # Mengirim satu baris header HTTP dengan status 200 OK ke socket
+        header = b'HTTP/1.1 200 OK\r\n\r\n'
+        # Mengirimkan data yang terdiri dari header HTTP dan outputdata ke socket client
+        connectionSocket.send(header + outputdata)
+        # Mencetak pesan bahwa respon telah selesai dan menunggu server
         print('Response done, waiting for server...\n')
 
-        #Close client socket
+        # Menutup socket client
         connectionSocket.close()
-    
+
+# Menutup socket server
 serverHost.close()
+# Mengakhiri Program
 sys.exit()
-#Terminate the program
